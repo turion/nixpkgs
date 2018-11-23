@@ -14,6 +14,7 @@ let
          [{ class_name = "org.apache.cassandra.locator.SimpleSeedProvider";
             parameters = [ { seeds = "127.0.0.1"; } ];
          }];
+       start_native_transport = true;
        data_file_directories = [ "${cfg.homeDir}/data" ];
        commitlog_directory = "${cfg.homeDir}/commitlog";
        saved_caches_directory = "${cfg.homeDir}/saved_caches";
