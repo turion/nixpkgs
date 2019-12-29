@@ -15075,8 +15075,6 @@ in
     inherit (haskellPackages) ghcWithPackages;
   };
 
-  AgdaSheaves = callPackage ../development/libraries/agda/Agda-Sheaves { };
-
   bitvector = callPackage ../development/libraries/agda/bitvector { };
 
   categories = callPackage ../development/libraries/agda/categories { };
