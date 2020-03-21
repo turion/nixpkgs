@@ -25,6 +25,8 @@ mkDerivation rec {
     description = "Programming library for Agda";
     license = stdenv.lib.licenses.mit;
     platforms = stdenv.lib.platforms.unix;
+    # broken since Agda 2.6.1
+    broken = true;
     maintainers = with maintainers; [ mudri alexarice ];
   };
 }
