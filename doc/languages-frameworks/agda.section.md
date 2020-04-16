@@ -67,7 +67,7 @@ To write a nix derivation for an agda library, first check that the library has 
 
 A derivation can then be written using `agda.mkDerivation`. This has similar arguments to `stdenv.mkDerivation` with the following exceptions:
 + The `buildInputsAgda` should be used for agda library dependencies.
-+ `everythingFile` can be used to specify the location of the `Everything.agda` file, defaulting to `./Everything.agda`.
++ `everythingFile` can be used to specify the location of the `Everything.agda` file, defaulting to `./Everything.agda`. If this file does not exist then either it should be patched in or the buildPhase should be overriden (see below).
 + `libraryName` should be the name that appears in the `*.agda-lib` file, defaulting to `pname`.
 + `libraryFile` should be the file name of the `*.agda-lib` file, defaulting to `${libraryName}.agda-lib`.
 
@@ -77,3 +77,4 @@ To add an agda package to `nixpkgs`, the derivation should be written to `pkgs/d
 ```
 { mkDerivation, standard-library, fetchFromGitHub }:
 ```
+and `mkDerivation` should be called instead of `agda.mkDerivation`.
