@@ -21,7 +21,7 @@ mkDerivation rec {
     # agda categories takes a lot of memory to build.
     # This can be removed if this is eventually fixed upstream.
     hydraPlatforms = [];
-    # Does not work with standard-library 1.2
+    # Waiting for release 0.2 for this to work
     broken = true;
     maintainers = with maintainers; [ alexarice ];
   };
