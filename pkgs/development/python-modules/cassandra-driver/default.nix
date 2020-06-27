@@ -44,5 +44,6 @@ buildPythonPackage rec {
     homepage = "http://datastax.github.io/python-driver";
     license = licenses.asl20;
     broken = true; # geomet doesn't exist
+    maintainers = with maintainers; [ turion ];
   };
 }
