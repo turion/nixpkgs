@@ -5,11 +5,11 @@
 
 buildPythonPackage rec {
   pname = "gremlinpython";
-  version = "3.4.6";
+  version = "3.4.8";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "08pgs51wcrzy5bhakzc4bj9adzfyk2qydna7qk686rgj685shvs2";
+    sha256 = "10fn4a7y4ak8yf5hb3f7ala33h940yp1v86waf0bzlny124p4kws";
   };
 
   # nativeBuildInputs = [ cython ];
