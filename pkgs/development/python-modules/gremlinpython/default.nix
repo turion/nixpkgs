@@ -1,6 +1,6 @@
 { stdenv, lib, buildPythonPackage, fetchPypi, python, pythonOlder
 , pytestrunner, pyhamcrest
-, six, isodate, tornado, aenum
+, six, isodate, tornado_5, aenum
 }:
 
 buildPythonPackage rec {
@@ -14,7 +14,7 @@ buildPythonPackage rec {
 
   # nativeBuildInputs = [ cython ];
   # buildInputs = [ libev ];
-  propagatedBuildInputs = [ pytestrunner six isodate tornado aenum ];
+  propagatedBuildInputs = [ pytestrunner six isodate tornado_5 aenum ];
   #   ++ lib.optionals (pythonOlder "3.4") [ futures ];
 
   checkInputs = [ pyhamcrest ];
