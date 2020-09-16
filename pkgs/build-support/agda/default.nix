@@ -41,6 +41,8 @@ let
     "lagda.tex"
   ];
 
+  filterAgdaBuildInputs = builtins.filter (p: p ? isAgdaDerivation);
+
   defaults =
     { pname
     , buildInputs ? []
@@ -52,7 +54,7 @@ let
     , extraExtensions ? []
     , ...
     }: let
-      agdaWithArgs = withPackages (builtins.filter (p: p ? isAgdaDerivation) buildInputs);
+      agdaWithArgs = withPackages (filterAgdaBuildInputs buildInputs);
     in
       {
         inherit libraryName libraryFile;
@@ -73,6 +75,8 @@ let
           find \( ${concatMapStringsSep " -or " (p: "-name '*.${p}'") (extensions ++ extraExtensions)} \) -exec cp -p --parents -t "$out" {} +
           runHook postInstall
         '';
+
+        env = withPackages buildInputs;
       };
 in
 {
