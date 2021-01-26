@@ -1,6 +1,9 @@
 # Builder for Agda packages.
 
-{ stdenv, lib, self, Agda, runCommandNoCC, makeWrapper, writeText, ghcWithPackages, nixosTests }:
+{ stdenv, lib, self, Agda, runCommandNoCC, makeWrapper, writeText, ghcWithPackages, nixosTests
+
+# Recursion only for testing
+, agdaPackages }:
 
 with lib.strings;
 
@@ -44,6 +47,7 @@ let
     "lagda.tex"
   ];
 
+  isUnbrokenAgdaPackage = pkg: pkg.isAgdaDerivation or false && !pkg.meta.broken;
   defaults =
     { pname
     , buildInputs ? []
@@ -76,6 +80,10 @@ let
           find -not \( -path ${everythingFile} -or -path ${lib.interfaceFile everythingFile} \) -and \( ${concatMapStringsSep " -or " (p: "-name '*.${p}'") (extensions ++ extraExtensions)} \) -exec cp -p --parents -t "$out" {} +
           runHook postInstall
         '';
+
+        # Retrieve all packages from the finished package set that have the current package as a dependency and build them
+        passthru.tests = with builtins;
+          lib.filterAttrs (name: pkg: isUnbrokenAgdaPackage pkg && elem pname (map (pkg: pkg.pname) pkg.buildInputs)) agdaPackages;
       };
 in
 {
