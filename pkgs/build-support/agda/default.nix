@@ -47,7 +47,6 @@ let
     "lagda.tex"
   ];
 
-  isUnbrokenAgdaPackage = pkg: pkg.isAgdaDerivation or false && !pkg.meta.broken;
   defaults =
     { pname
     , buildInputs ? []
@@ -83,7 +82,7 @@ let
 
         # Retrieve all packages from the finished package set that have the current package as a dependency and build them
         passthru.tests = with builtins;
-          lib.filterAttrs (name: pkg: isUnbrokenAgdaPackage pkg && elem pname (map (pkg: pkg.pname) pkg.buildInputs)) agdaPackages;
+          lib.filterAttrs (name: pkg: agdaPackages.lib.isUnbrokenAgdaPackage pkg && elem pname (map (pkg: pkg.pname) pkg.buildInputs)) agdaPackages;
       };
 in
 {
