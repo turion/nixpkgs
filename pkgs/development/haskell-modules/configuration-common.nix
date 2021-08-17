@@ -1946,4 +1946,45 @@ EOT
     Cabal = self.Cabal_3_6_0_0;
   };
 
+  nixpkgs-update = let
+    # This is only for demonstration until a new version is released on hackage
+    githubSource =
+      overrideSrc super.nixpkgs-update {
+        src = pkgs.fetchFromGitHub {
+          owner = "ryantm";
+          repo = "nixpkgs-update";
+          rev = "2b479c77fac583883a75dd8274618884583af028";
+          sha256 = "02in2wlrwppzp0j54bz1ph6d5yb3b8id6zpb91xpq02r300bi6i9";
+        };
+      };
+    # I don't get why I need these. Does overrideSrc not rerun cabal2nix and thus get the new dependencies?
+    addedLibraries =
+      addExtraLibraries githubSource (with self; [
+        conduit
+        cryptohash-sha256
+        hspec
+        hspec-discover
+        http-conduit
+        parsers
+        partial-order
+        polysemy_1_6_0_0
+        polysemy-plugin_0_4_0_0
+        regex-applicative-text
+        servant
+        servant-client
+        sqlite-simple
+        temporary
+        th-env
+        typed-process
+        versions
+        xdg-basedir
+      ]);
+  in unmarkBroken (doJailbreak addedLibraries);
+
+  # Don't know why this is marked broken in the first place
+  polysemy_1_6_0_0 = unmarkBroken super.polysemy_1_6_0_0;
+
+  polysemy-plugin_0_4_0_0 = super.polysemy-plugin_0_4_0_0.override {
+    polysemy = self.polysemy_1_6_0_0;
+  };
 } // import ./configuration-tensorflow.nix {inherit pkgs haskellLib;} self super

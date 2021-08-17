@@ -2351,7 +2351,6 @@ dont-distribute-packages:
  - polysemy-optics
  - polysemy-path
  - polysemy-plugin
- - polysemy-plugin_0_4_0_0
  - polysemy-readline
  - polysemy-req
  - polysemy-resume
