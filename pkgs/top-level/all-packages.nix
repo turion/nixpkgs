@@ -7517,6 +7517,8 @@ with pkgs;
 
   nitrogen = callPackage ../tools/X11/nitrogen {};
 
+  nixpkgs-update = haskell.lib.justStaticExecutables haskellPackages.nixpkgs-update;
+
   nms = callPackage ../tools/misc/nms { };
 
   nomachine-client = callPackage ../tools/admin/nomachine-client { };
