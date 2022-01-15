@@ -17,8 +17,8 @@ let
   handleTest = path: args:
     discoverTests (import path ({ inherit system pkgs; } // args));
   handleTestOn = systems: path: args:
-    if elem system systems then handleTest path args
-    else {};
+    if elem system systems then debug.traceVal (builtins.trace "yep system" (handleTest path args))
+    else builtins.trace "nope system" {};
 
   nixosLib = import ../lib {
     # Experimental features need testing too, but there's no point in warning
