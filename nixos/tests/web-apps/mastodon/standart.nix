@@ -1,4 +1,4 @@
-import ../make-test-python.nix ({pkgs, ...}:
+import ../../make-test-python.nix ({pkgs, ...}:
 let
   test-certificates = pkgs.runCommandLocal "test-certificates" { } ''
     mkdir -p $out
@@ -15,7 +15,7 @@ let
 
 in
 {
-  name = "mastodon";
+  name = "mastodon-standart";
   meta.maintainers = with pkgs.lib.maintainers; [ erictapen izorkin turion ];
 
   nodes = {
