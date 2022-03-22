@@ -1085,6 +1085,17 @@ services.github-runner.serviceOverrides.SupplementaryGroups = [
 ];
 </programlisting>
       </listitem>
+      <listitem>
+        <para>
+          In <literal>mastodon</literal> it is now necessary to specify
+          location of file with <literal>PostgreSQL</literal> database
+          password. In
+          <literal>services.mastodon.database.passwordFile</literal>
+          parameter default value
+          <literal>/var/lib/mastodon/secrets/db-password</literal> has
+          been changed to <literal>null</literal>.
+        </para>
+      </listitem>
     </itemizedlist>
   </section>
   <section xml:id="sec-release-22.11-notable-changes">
@@ -1151,6 +1162,12 @@ services.github-runner.serviceOverrides.SupplementaryGroups = [
           <literal>mastodon</literal> now automatically removes remote
           media attachments older than 30 days. This is configurable
           through <literal>services.mastodon.mediaAutoRemove</literal>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <literal>mastodon</literal> now supports connection to a
+          remote <literal>PostrgeSQL</literal> database.
         </para>
       </listitem>
       <listitem>

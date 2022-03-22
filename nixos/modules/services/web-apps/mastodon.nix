@@ -1,7 +1,9 @@
-{ config, lib, pkgs, ... }:
+{ lib, pkgs, config, options, ... }:
 
 let
   cfg = config.services.mastodon;
+  opt = options.services.mastodon;
+
   # We only want to create a database if we're actually going to connect to it.
   databaseActuallyCreateLocally = cfg.database.createLocally && cfg.database.host == "/run/postgresql";
 
@@ -23,7 +25,6 @@ let
     REDIS_HOST = cfg.redis.host;
     REDIS_PORT = toString(cfg.redis.port);
     DB_HOST = cfg.database.host;
-    DB_PORT = toString(cfg.database.port);
     DB_NAME = cfg.database.name;
     LOCAL_DOMAIN = cfg.localDomain;
     SMTP_SERVER = cfg.smtp.host;
@@ -37,6 +38,7 @@ let
 
     TRUSTED_PROXY_IP = cfg.trustedProxy;
   }
+  // (if (cfg.database.host != "/run/postgresql" && cfg.database.port != null) then { DB_PORT = toString cfg.database.port; } else {})
   // (if cfg.smtp.authenticate then { SMTP_LOGIN  = cfg.smtp.user; } else {})
   // cfg.extraConfig;
 
@@ -313,8 +315,13 @@ in {
         };
 
         port = lib.mkOption {
-          type = lib.types.int;
-          default = 5432;
+          type = lib.types.nullOr lib.types.port;
+          default = if cfg.database.createLocally then null else 5432;
+          defaultText = lib.literalExpression ''
+            if config.${opt.database.createLocally}
+            then null
+            else 5432
+          '';
           description = lib.mdDoc "Database host port.";
         };
 
@@ -332,8 +339,8 @@ in {
 
         passwordFile = lib.mkOption {
           type = lib.types.nullOr lib.types.path;
-          default = "/var/lib/mastodon/secrets/db-password";
-          example = "/run/keys/mastodon-db-password";
+          default = null;
+          example = "/var/lib/mastodon/secrets/db-password";
           description = lib.mdDoc ''
             A file containing the password corresponding to
             {option}`database.user`.
@@ -465,7 +472,25 @@ in {
     assertions = [
       {
         assertion = databaseActuallyCreateLocally -> (cfg.user == cfg.database.user);
-        message = ''For local automatic database provisioning (services.mastodon.database.createLocally == true) with peer authentication (services.mastodon.database.host == "/run/postgresql") to work services.mastodon.user and services.mastodon.database.user must be identical.'';
+        message = ''
+          For local automatic database provisioning (services.mastodon.database.createLocally == true) with peer
+            authentication (services.mastodon.database.host == "/run/postgresql") to work services.mastodon.user
+            and services.mastodon.database.user must be identical.
+        '';
+      }
+      {
+        assertion = !databaseActuallyCreateLocally -> (cfg.database.host != "/run/postgresql");
+        message = ''
+          <option>services.mastodon.database.host</option> needs to be set if
+            <option>services.mastodon.database.createLocally</option> is not enabled.
+        '';
+      }
+      {
+        assertion = !databaseActuallyCreateLocally -> (cfg.database.passwordFile != null);
+        message = ''
+          <option>services.mastodon.database.passwordFile</option> needs to be set if
+            <option>services.mastodon.database.createLocally</option> is not enabled.
+        '';
       }
     ];
 
@@ -493,7 +518,9 @@ in {
         OTP_SECRET="$(cat ${cfg.otpSecretFile})"
         VAPID_PRIVATE_KEY="$(cat ${cfg.vapidPrivateKeyFile})"
         VAPID_PUBLIC_KEY="$(cat ${cfg.vapidPublicKeyFile})"
+      '' + (if cfg.database.passwordFile != null then ''
         DB_PASS="$(cat ${cfg.database.passwordFile})"
+      '' else "") + ''
       '' + (if cfg.smtp.authenticate then ''
         SMTP_PASSWORD="$(cat ${cfg.smtp.passwordFile})"
       '' else "") + ''
