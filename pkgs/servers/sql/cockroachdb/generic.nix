@@ -1,6 +1,6 @@
 { lib, stdenv, buildGoModule, fetchurl, fetchFromGitHub, cmake, xz, which
 , autoconf, ncurses6, libedit, libunwind, installShellFiles, removeReferencesTo
-, yarn, git, go, version, sha256, patches ? [ ] }:
+, yarn, git, go, procps, bazel, ccache, version, sha256, patches ? [ ] }:
 
 buildGoModule rec {
   pname = "cockroach";
@@ -28,7 +28,7 @@ buildGoModule rec {
     "-Wno-error=pessimizing-move"
   ];
 
-  nativeBuildInputs = [ yarn git installShellFiles cmake xz which autoconf ];
+  nativeBuildInputs = [ yarn git installShellFiles cmake xz which autoconf procps bazel ];
   buildInputs = if stdenv.isDarwin then [ libunwind libedit ] else [ ncurses6 ];
 
   inherit patches;
