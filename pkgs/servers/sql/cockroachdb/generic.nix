@@ -1,6 +1,6 @@
 { lib, stdenv, buildGoModule, fetchurl, fetchFromGitHub, cmake, xz, which
 , autoconf, ncurses6, libedit, libunwind, installShellFiles, removeReferencesTo
-, go, version, sha256, patches ? [ ] }:
+, yarn, git, go, version, sha256, patches ? [ ] }:
 
 buildGoModule rec {
   pname = "cockroach";
@@ -16,6 +16,7 @@ buildGoModule rec {
     repo = "cockroach";
     rev = "v${version}";
     fetchSubmodules = true;
+    deepClone = true;
     inherit sha256;
   };
 
@@ -27,7 +28,7 @@ buildGoModule rec {
     "-Wno-error=pessimizing-move"
   ];
 
-  nativeBuildInputs = [ installShellFiles cmake xz which autoconf ];
+  nativeBuildInputs = [ yarn git installShellFiles cmake xz which autoconf ];
   buildInputs = if stdenv.isDarwin then [ libunwind libedit ] else [ ncurses6 ];
 
   inherit patches;
@@ -35,11 +36,16 @@ buildGoModule rec {
   postPatch = ''
     patchShebangs .
   '';
+  postUnpack = ''
+    # very ugly hack :/
+    mkdir -p go/src/github.com/cockroachdb
+    mv source go/src/github.com/cockroachdb/cockroach
+    sourceRoot=go/src/github.com/cockroachdb/cockroach
+  '';
   buildPhase = ''
     runHook preBuild
     export HOME=$TMPDIR
     make buildoss
-    cd src/github.com/cockroachdb/cockroach
     for asset in man autocomplete; do
       ./cockroachoss gen $asset
     done
