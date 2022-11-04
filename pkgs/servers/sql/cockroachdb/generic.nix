@@ -43,10 +43,14 @@ buildGoModule rec {
     sourceRoot=go/src/github.com/cockroachdb/cockroach
   '';
   buildPhase = ''
+    echo "runHook"
     runHook preBuild
     export HOME=$TMPDIR
+    echo "making buildoss"
     make buildoss
+    echo "made buildoss"
     for asset in man autocomplete; do
+      echo "making asset $asset"
       ./cockroachoss gen $asset
     done
     runHook postBuild
