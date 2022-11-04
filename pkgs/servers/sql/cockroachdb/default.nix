@@ -5,14 +5,14 @@
   # EOL: 2022-05-10
   cockroachdb_20_2 = callPackage ./generic.nix {
     version = "20.2.18";
-    sha256 = "1m850w1lm8x14yj2b6l3yvma0dbr6l4lislhy7d2yl37pgbg6s60";
+    sha256 = "sha256-FHvVjoHkKKXDeN/H5J8vclA8/H9A4GYlfjFI+pXeTC8=";
   };
 
   # Maintenance Support Ends: 2022-05-18
   # EOL: 2022-11-18
   cockroachdb_21_1 = callPackage ./generic.nix {
     version = "21.1.13";
-    sha256 = "1npqh75w1x2jjmy512jxqlr4caam96lw74gfs8kdq0iaw6hkh3y2";
+    sha256 = "sha256-gznglQKRJqPPJMlN9v/IYM78WP5KqOEuoAW4scmKScg=";
   };
 
   # Maintenance Support Ends: 2022-11-16
