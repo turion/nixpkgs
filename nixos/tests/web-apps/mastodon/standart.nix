@@ -1,16 +1,13 @@
 import ../../make-test-python.nix ({pkgs, ...}:
 let
-  test-certificates = pkgs.runCommandLocal "test-certificates" { } ''
+  cert = pkgs: pkgs.runCommand "selfSignedCerts" { buildInputs = [ pkgs.openssl ]; } ''
+    openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -nodes -subj '/CN=mastodon.local' -days 36500
     mkdir -p $out
-    echo insecure-root-password > $out/root-password-file
-    echo insecure-intermediate-password > $out/intermediate-password-file
-    ${pkgs.step-cli}/bin/step certificate create "Example Root CA" $out/root_ca.crt $out/root_ca.key --password-file=$out/root-password-file --profile root-ca
-    ${pkgs.step-cli}/bin/step certificate create "Example Intermediate CA 1" $out/intermediate_ca.crt $out/intermediate_ca.key --password-file=$out/intermediate-password-file --ca-password-file=$out/root-password-file --profile intermediate-ca --ca $out/root_ca.crt --ca-key $out/root_ca.key
+    cp key.pem cert.pem $out
   '';
 
   hosts = ''
-    192.168.2.10 ca.local
-    192.168.2.11 mastodon.local
+    192.168.2.101 mastodon.local
   '';
 
 in
@@ -19,42 +16,6 @@ in
   meta.maintainers = with pkgs.lib.maintainers; [ erictapen izorkin turion ];
 
   nodes = {
-    ca = { pkgs, ... }: {
-      networking = {
-        interfaces.eth1 = {
-          ipv4.addresses = [
-            { address = "192.168.2.10"; prefixLength = 24; }
-          ];
-        };
-        extraHosts = hosts;
-      };
-      services.step-ca = {
-        enable = true;
-        address = "0.0.0.0";
-        port = 8443;
-        openFirewall = true;
-        intermediatePasswordFile = "${test-certificates}/intermediate-password-file";
-        settings = {
-          dnsNames = [ "ca.local" ];
-          root = "${test-certificates}/root_ca.crt";
-          crt = "${test-certificates}/intermediate_ca.crt";
-          key = "${test-certificates}/intermediate_ca.key";
-          db = {
-            type = "badger";
-            dataSource = "/var/lib/step-ca/db";
-          };
-          authority = {
-            provisioners = [
-              {
-                type = "ACME";
-                name = "acme";
-              }
-            ];
-          };
-        };
-      };
-    };
-
     server = { pkgs, ... }: {
 
       virtualisation.memorySize = 2048;
@@ -62,7 +23,7 @@ in
       networking = {
         interfaces.eth1 = {
           ipv4.addresses = [
-            { address = "192.168.2.11"; prefixLength = 24; }
+            { address = "192.168.2.101"; prefixLength = 24; }
           ];
         };
         extraHosts = hosts;
@@ -70,12 +31,7 @@ in
       };
 
       security = {
-        acme = {
-          acceptTerms = true;
-          defaults.server = "https://ca.local:8443/acme/acme/directory";
-          defaults.email = "mastodon@mastodon.local";
-        };
-        pki.certificateFiles = [ "${test-certificates}/root_ca.crt" ];
+        pki.certificateFiles = [ "${cert pkgs}/cert.pem" ];
       };
 
       services.redis.servers.mastodon = {
@@ -89,22 +45,20 @@ in
         configureNginx = true;
         localDomain = "mastodon.local";
         enableUnixSocket = false;
-        redis = {
-          createLocally = true;
-          host = "127.0.0.1";
-          port = 31637;
-        };
-        database = {
-          createLocally = true;
-          host = "/run/postgresql";
-          port = 5432;
-        };
         smtp = {
           createLocally = false;
           fromAddress = "mastodon@mastodon.local";
         };
         extraConfig = {
           EMAIL_DOMAIN_ALLOWLIST = "example.com";
+        };
+      };
+
+      services.nginx = {
+        virtualHosts."mastodon.local" = {
+          enableACME = pkgs.lib.mkForce false;
+          sslCertificate = "${cert pkgs}/cert.pem";
+          sslCertificateKey = "${cert pkgs}/key.pem";
         };
       };
     };
@@ -114,17 +68,22 @@ in
       networking = {
         interfaces.eth1 = {
           ipv4.addresses = [
-            { address = "192.168.2.12"; prefixLength = 24; }
+            { address = "192.168.2.102"; prefixLength = 24; }
           ];
         };
         extraHosts = hosts;
       };
 
       security = {
-        pki.certificateFiles = [ "${test-certificates}/root_ca.crt" ];
+        pki.certificateFiles = [ "${cert pkgs}/cert.pem" ];
       };
     };
   };
 
-  testScript = import ./script.nix {};
+  testScript = import ./script.nix {
+    extraInit = ''
+      server.wait_for_unit("nginx.service")
+      server.wait_for_unit("postgresql.service")
+    '';
+  };
 })
