@@ -1,6 +1,6 @@
 { pkgs
-, extraInit ? ""
-, extraShutdown ? ""
+, extraInit
+, extraShutdown
 }:
 
 
@@ -13,8 +13,6 @@ server.wait_for_unit("redis-mastodon.service")
 server.wait_for_unit("mastodon-sidekiq.service")
 server.wait_for_unit("mastodon-streaming.service")
 server.wait_for_unit("mastodon-web.service")
-server.wait_for_open_port(55000)
-server.wait_for_open_port(55001)
 
 # Check that mastodon-media-auto-remove is scheduled
 server.succeed("systemctl status mastodon-media-auto-remove.timer")

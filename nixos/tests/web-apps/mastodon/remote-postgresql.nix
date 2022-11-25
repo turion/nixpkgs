@@ -1,19 +1,11 @@
 import ../../make-test-python.nix ({pkgs, ...}:
 let
-  cert = pkgs: pkgs.runCommand "selfSignedCerts" { buildInputs = [ pkgs.openssl ]; } ''
-    openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -nodes -subj '/CN=mastodon.local' -days 36500
-    mkdir -p $out
-    cp key.pem cert.pem $out
-  '';
-
   hosts = ''
-    192.168.2.103 mastodon.local
+    192.168.2.101 mastodon.local
   '';
-
 in
-{
-  name = "mastodon-remote-postgresql";
-  meta.maintainers = with pkgs.lib.maintainers; [ erictapen izorkin turion ];
+import ./generic.nix pkgs ({ cert }: {
+  inherit pkgs hosts;
 
   nodes = {
     database = {
@@ -45,7 +37,7 @@ in
       networking = {
         interfaces.eth1 = {
           ipv4.addresses = [
-            { address = "192.168.2.103"; prefixLength = 24; }
+            { address = "192.168.2.101"; prefixLength = 24; }
           ];
         };
         extraHosts = hosts;
@@ -80,80 +72,51 @@ in
       };
     };
 
-    server = { pkgs, ... }: {
-      virtualisation.memorySize = 2048;
+    server = {
+      imports = [
+        (import ./common/server.nix { inherit hosts cert; })
+      ];
 
       environment = {
         etc = {
-          "mastodon/password-posgressql-db".text = ''
+          "mastodon/password-posgresql-db".text = ''
             SoDTZcISc3f1M1LJsRLT
           '';
         };
       };
 
       networking = {
-        interfaces.eth1 = {
-          ipv4.addresses = [
-            { address = "192.168.2.201"; prefixLength = 24; }
-          ];
-        };
-        extraHosts = hosts;
         firewall.allowedTCPPorts = [ 55001 55002 ];
       };
 
       services.mastodon = {
-        enable = true;
-        configureNginx = false;
-        localDomain = "mastodon.local";
-        enableUnixSocket = false;
         database = {
           createLocally = false;
           host = "192.168.2.102";
           port = 5432;
           name = "mastodon_local";
           user = "mastodon_test";
-          passwordFile = "/etc/mastodon/password-posgressql-db";
-        };
-        smtp = {
-          createLocally = false;
-          fromAddress = "mastodon@mastodon.local";
+          passwordFile = "/etc/mastodon/password-posgresql-db";
         };
         extraConfig = {
           BIND = "0.0.0.0";
-          EMAIL_DOMAIN_ALLOWLIST = "example.com";
           RAILS_SERVE_STATIC_FILES = "true";
-          TRUSTED_PROXY_IP = "192.168.2.103";
+          TRUSTED_PROXY_IP = "192.168.2.101";
         };
-      };
-    };
-
-    client = { pkgs, ... }: {
-      environment.systemPackages = [ pkgs.jq ];
-      networking = {
-        interfaces.eth1 = {
-          ipv4.addresses = [
-            { address = "192.168.2.202"; prefixLength = 24; }
-          ];
-        };
-        extraHosts = hosts;
-      };
-
-      security = {
-        pki.certificateFiles = [ "${cert pkgs}/cert.pem" ];
       };
     };
   };
 
-  testScript = import ./script.nix {
-    inherit pkgs;
-    extraInit = ''
-      nginx.wait_for_unit("nginx.service")
-      database.wait_for_unit("postgresql.service")
-      database.wait_for_open_port(5432)
-    '';
-    extraShutdown = ''
-      database.shutdown()
-      nginx.shutdown()
-    '';
-  };
-})
+  extraInit = ''
+    nginx.wait_for_unit("nginx.service")
+    database.wait_for_unit("postgresql.service")
+    database.wait_for_open_port(5432)
+    server.wait_for_open_port(55000)
+    server.wait_for_open_port(55001)
+  '';
+
+  extraShutdown = ''
+    database.shutdown()
+    nginx.shutdown()
+  '';
+}))
