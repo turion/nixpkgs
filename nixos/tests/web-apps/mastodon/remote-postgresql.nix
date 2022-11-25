@@ -145,6 +145,7 @@ in
   };
 
   testScript = import ./script.nix {
+    inherit pkgs;
     extraInit = ''
       nginx.wait_for_unit("nginx.service")
       database.wait_for_unit("postgresql.service")

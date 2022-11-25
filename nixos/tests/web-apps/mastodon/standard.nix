@@ -12,7 +12,7 @@ let
 
 in
 {
-  name = "mastodon-standart";
+  name = "mastodon-standard";
   meta.maintainers = with pkgs.lib.maintainers; [ erictapen izorkin turion ];
 
   nodes = {
@@ -81,6 +81,7 @@ in
   };
 
   testScript = import ./script.nix {
+    inherit pkgs;
     extraInit = ''
       server.wait_for_unit("nginx.service")
       server.wait_for_unit("postgresql.service")

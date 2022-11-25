@@ -1,4 +1,5 @@
-{ extraInit ? ""
+{ pkgs
+, extraInit ? ""
 , extraShutdown ? ""
 }:
 
@@ -7,7 +8,6 @@
 start_all()
 
 ${extraInit}
-
 
 server.wait_for_unit("redis-mastodon.service")
 server.wait_for_unit("mastodon-sidekiq.service")
@@ -51,5 +51,5 @@ client.succeed("curl --fail https://mastodon.local/about")
 server.shutdown()
 client.shutdown()
 
-${extraScript}
+${extraShutdown}
 ''
